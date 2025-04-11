@@ -300,3 +300,21 @@ func TestGetenvBoolSlice(t *testing.T) {
 		assert.DeepEqual(t, []bool{true, false, true}, *otherAddr)
 	}
 }
+
+func TestRegisterCallbackEnv(t *testing.T) {
+	callBackCalled := 0
+	RegisterCallbackEnv("TEST_CALLBACK", func() {
+		callBackCalled++
+	})
+	ReloadEnv()
+	ReloadEnv()
+	assert.Equal(t, 2, callBackCalled)
+	UnregisterCallbackEnv("TEST_CALLBACK")
+	ReloadEnv()
+	assert.Equal(t, 2, callBackCalled)
+	RegisterCallbackEnv("TEST_CALLBACK", func() {
+		callBackCalled++
+	})
+	ReloadEnv()
+	assert.Equal(t, 3, callBackCalled)
+}

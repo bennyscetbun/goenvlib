@@ -15,6 +15,9 @@ type envRegistered struct {
 	addr    interface{}
 }
 
+var mutCallbackEnv sync.Mutex
+var registeredCallbackEnv = make(map[string]func())
+
 var envMap = make(map[string]envRegistered)
 
 func ReloadEnv() {
@@ -23,6 +26,23 @@ func ReloadEnv() {
 	for _, reg := range envMap {
 		reg.updater()
 	}
+	mutCallbackEnv.Lock()
+	defer mutCallbackEnv.Unlock()
+	for _, callback := range registeredCallbackEnv {
+		callback()
+	}
+}
+
+func RegisterCallbackEnv(key string, callback func()) {
+	mutCallbackEnv.Lock()
+	defer mutCallbackEnv.Unlock()
+	registeredCallbackEnv[key] = callback
+}
+
+func UnregisterCallbackEnv(key string) {
+	mutCallbackEnv.Lock()
+	defer mutCallbackEnv.Unlock()
+	delete(registeredCallbackEnv, key)
 }
 
 func getenv[T any](env string, defaultVal T, converter func(string) (T, error)) (T, error) {
